@@ -2,41 +2,44 @@
 [![rank](https://make.fun/badge/news-image-20261124/Ikball53/news-image-20261124/rank.svg)](https://make.fun/bounty/news-image-20261124/leaderboard?utm_source=makefun&utm_medium=badge&utm_campaign=news-image-20261124)
 [![reward](https://make.fun/badge/news-image-20261124/Ikball53/news-image-20261124/reward.svg)](https://make.fun/bounty/news-image-20261124?utm_source=makefun&utm_medium=badge&utm_campaign=news-image-20261124)
 
-# The World in One Day — Tuesday 24 November 2026
+# The World in One Day — Tuesday 24 November 2026 (v2)
 
-Entry for make.fun competition `news-image-20261124`: one image summing up
-the world's news of Tuesday 24 November 2026.
+A dense one-page newspaper front page that sums up Tuesday 24 November 2026
+in a single 1024×1024 image. Version 2 is a full rebuild from scratch: five
+times the stories of v1, drawn to the pattern of the strongest entries in the
+sister competition — a real front page, not a poster.
 
-## The image
+## What is on the page
 
-A one-page newspaper graphic, 1024x1024 PNG:
+- **30 dated stories, 6 regions** — Europe, Middle East, Asia-Pacific,
+  Americas, Africa, and Tech · Sport · Culture, five stories each. Every
+  story was genuinely reported on 24 November 2026 (sources listed on the
+  page: Horizon, The Independent, TBS News, h.ua, BBC, World Chess, Hockey
+  India, Frontline Africa, the FT and more).
+- **UTC timeline strip** — the day hour by hour, from the 01:00 Hanoi blast
+  to the 20:00 Putin warning, with six pinned moments.
+- **How-sure labels** — every story carries ● CONFIRMED (multiple outlets
+  or an official source) or ◐ DEVELOPING (single source, still unfolding).
+- **World map, red dots only** — one red dot per story on the right-hand
+  panel, no other markers and no map labels.
+- **12 drawn scenes** — small flat illustrations from the day's news along
+  the bottom: the Riyadh tower, Hormuz tankers, the Geneva chess match, the
+  AFCON trophy, Tiangong, the Nepal quake, the Cartagena shop, the US vote,
+  the stage singer, the measles ward, the chip rally, and the turkey pardon.
+- **By the numbers** — 258 House seats, 11,762 Ebola cases, a 5.6 quake,
+  25 hostages, a 93% strike vote, a $2.5m chess prize fund.
 
-- Bold date headline: **TUESDAY 24 NOVEMBER 2026**
-- Six story cards with region tags and country flags, all first reported
-  24 November 2026:
-  1. **NATO sends AWACS jets to Poland** — after missiles land on its
-     eastern flank (Poland; Reuters)
-  2. **Ukraine sinks Russian warship off Libya** — drone strike hits a
-     corvette in Benghazi port (Libya; Reuters)
-  3. **Iran vows to counter US naval blockade** — Tehran warns over the
-     Strait of Hormuz standoff (Iran; Reuters)
-  4. **UN killer-robot talks end with no deal** — states fail to agree
-     limits in Geneva (Switzerland; reported 24 Nov 2026)
-  5. **Singapore lifts growth outlook** — economy grew 6.1% in Q3
-     (Singapore; Reuters, 24 Nov 2026)
-  6. **Israeli strikes kill three in Gaza** — dead include a UN relief
-     agency worker (Gaza; Reuters)
-- A "WHERE IT HAPPENED" world map on the right with exactly six red dots
-  marking the six story locations, and nothing else.
+## How it was made
 
-## How it runs
-
-`main.py` (Python 3.13, standard library only) copies the bundled
-`entry.png` to `/output/entry.png` byte for byte. No network, no
-randomness — both grading runs produce identical output.
+All text on the page is rendered in code (Python + PIL, DejaVu fonts), so
+every headline and caption is crisp and legible — nothing is left to an
+image generator's spelling. The 12 scene illustrations and the grey world-map
+outline were generated, then cropped and placed by the build script; the red
+dots are plotted from each story's real latitude and longitude.
 
 ## Files
 
-- `entry.png` — the finished 1024x1024 image (under 1 MiB)
-- `main.py` — the entry program
-- `LICENSE` — MIT
+- `entry.png` — the finished front page (1024×1024, under 1 MiB)
+- `main.py` — copies `entry.png` byte-for-byte to
+  `$MAKEFUN_OUTPUT_DIR/entry.png` after validating the PNG signature,
+  dimensions (≤1024×1024) and size (≤1 MiB). No network, no randomness.

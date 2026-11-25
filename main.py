@@ -1,66 +1,67 @@
-"""news-image-20261124 entry runner.
+#!/usr/bin/env python3
+"""Publish the v2 front page for news-image-20261124.
 
-The artwork itself is the entry: a one-page newspaper graphic summing up
-Tuesday 24 November 2026, drawn beforehand and shipped in this repo as
-entry.png.  This program's only job is to place that exact image at the
-path the grader reads, /output/entry.png, byte for byte, every time.
-
-No network, no randomness, no timestamps in the output: the same input
-bytes always produce the same output bytes, so the two grading runs agree.
+Reads the finished 1024x1024 front page (entry.png, rendered by the local
+build script with PIL so every glyph is crisp) and drops an exact copy into
+the output directory the harness points at. Nothing is fetched, generated,
+or randomised here: the image is a fixed asset and this program is only a
+courier that checks the parcel before handing it over.
 """
 
 import os
+import struct
+import sys
 from pathlib import Path
 
-
-# Where the grader expects the finished image.  A local run can point
-# somewhere else with MAKEFUN_OUTPUT_DIR, which the grader never sets.
-DEST_DIR = Path(os.environ.get("MAKEFUN_OUTPUT_DIR", "/output"))
-
-# The artwork lives next to this file in the repository snapshot.
-ARTWORK_NAME = "entry.png"
+PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
+MAX_EDGE = 1024
+MAX_BYTES = 1024 * 1024
 
 
-def locate_artwork() -> Path:
-    """Find the bundled graphic sitting beside this program file."""
+def read_asset() -> bytes:
+    """Load the finished front page that sits next to this program."""
     here = Path(__file__).resolve().parent
-    bundled = here / ARTWORK_NAME
-    if not bundled.is_file():
-        raise FileNotFoundError(f"bundled artwork missing: {bundled}")
-    return bundled
+    return (here / "entry.png").read_bytes()
 
 
-def check_png_shape(payload: bytes) -> None:
-    """Reject anything that is not a whole, reasonably sized PNG.
-
-    The gate allows at most 1024x1024 pixels and 1 MiB.  Width and height
-    live in the IHDR chunk right after the 8-byte signature, big-endian.
-    """
-    if len(payload) < 24 or not payload.startswith(b"\x89PNG\r\n\x1a\n"):
-        raise ValueError("bundled artwork is not a PNG image")
-    width = int.from_bytes(payload[16:20], "big")
-    height = int.from_bytes(payload[20:24], "big")
-    if width > 1024 or height > 1024:
-        raise ValueError(f"artwork too large: {width}x{height}")
-    if len(payload) > 1_048_576:
-        raise ValueError(f"artwork over 1 MiB: {len(payload)} bytes")
+def png_dimensions(blob: bytes) -> tuple[int, int]:
+    """Pull width/height out of the IHDR chunk of a PNG byte string."""
+    if blob[:8] != PNG_MAGIC:
+        raise ValueError("entry.png does not start with the PNG signature")
+    if len(blob) < 33 or blob[12:16] != b"IHDR":
+        raise ValueError("entry.png has no IHDR chunk where one belongs")
+    width, height = struct.unpack(">II", blob[16:24])
+    return width, height
 
 
-def publish_artwork() -> Path:
-    """Copy the bundled bytes to the grader's output path, unchanged."""
-    source = locate_artwork()
-    payload = source.read_bytes()
-    check_png_shape(payload)
-    DEST_DIR.mkdir(parents=True, exist_ok=True)
-    target = DEST_DIR / ARTWORK_NAME
-    target.write_bytes(payload)
-    return target
+def check_parcel(blob: bytes) -> tuple[int, int]:
+    """Reject anything that breaks the competition's image rules."""
+    if len(blob) > MAX_BYTES:
+        raise ValueError(
+            "entry.png is %d bytes, over the 1 MiB limit" % len(blob))
+    width, height = png_dimensions(blob)
+    if width > MAX_EDGE or height > MAX_EDGE:
+        raise ValueError(
+            "entry.png is %dx%d, over the 1024x1024 limit"
+            % (width, height))
+    return width, height
 
 
-def main() -> None:
-    placed = publish_artwork()
-    print(f"wrote {placed} ({placed.stat().st_size} bytes)")
+def main() -> int:
+    blob = read_asset()
+    width, height = check_parcel(blob)
+    target_dir = Path(os.environ.get("MAKEFUN_OUTPUT_DIR", "/output"))
+    target_dir.mkdir(parents=True, exist_ok=True)
+    target = target_dir / "entry.png"
+    target.write_bytes(blob)
+    echoed = target.read_bytes()
+    if echoed != blob:
+        raise ValueError("copy check failed: %s differs from entry.png"
+                         % target)
+    print("wrote %d bytes to %s (%dx%d PNG, copy verified)"
+          % (len(blob), target, width, height))
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
